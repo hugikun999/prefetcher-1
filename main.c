@@ -6,6 +6,7 @@
 #include <assert.h>
 
 #include <xmmintrin.h>
+#include "pmmintrin.h"
 
 #define TEST_W 4096
 #define TEST_H 4096
@@ -47,12 +48,23 @@ int main()
             printf("\n");
         }
         printf("\n");
+
         sse_transpose(testin, testout, 4, 4);
+        printf("see_transpose:\n");
         for (int y = 0; y < 4; y++) {
             for (int x = 0; x < 4; x++)
                 printf(" %2d", testout[y * 4 + x]);
             printf("\n");
         }
+
+        sse_transpose_lddqu(testin, testout, 4, 4);
+        printf("\nsee_transpose_lddqu:\n");
+        for (int y = 0; y < 4; y++) {
+            for (int x = 0; x < 4; x++)
+                printf(" %2d", testout[y * 4 + x]);
+            printf("\n");
+        }
+
         assert(0 == memcmp(testout, expected, 16 * sizeof(int)) &&
                "Verification fails");
     }
@@ -63,6 +75,7 @@ int main()
         int *out0 = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
         int *out1 = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
         int *out2 = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
+        int *out3 = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
 
         srand(time(NULL));
         for (int y = 0; y < TEST_H; y++)
@@ -78,6 +91,11 @@ int main()
         sse_transpose(src, out1, TEST_W, TEST_H);
         clock_gettime(CLOCK_REALTIME, &end);
         printf("sse: \t\t %ld us\n", diff_in_us(start, end));
+
+        clock_gettime(CLOCK_REALTIME, &start);
+        sse_transpose_lddqu(src, out3, TEST_W, TEST_H);
+        clock_gettime(CLOCK_REALTIME, &end);
+        printf("sse_lddqu: \t %ld us\n", diff_in_us(start, end));
 
         clock_gettime(CLOCK_REALTIME, &start);
         naive_transpose(src, out2, TEST_W, TEST_H);
