@@ -80,7 +80,7 @@ int *sse_transpose(int *src, int w, int h)
     return dst;
 }
 
-int *sse_prefetch_transpose(int *src, int w, int h)
+int *prefetch_transpose(int *src, int w, int h)
 {
     int *dst = (int *) malloc(sizeof(int) * w * h);
 

@@ -14,6 +14,21 @@
 #define TEST_H 4096
 #define TEST_W 4096
 
+#define TEST_MATRIX(name) \
+	Matrix matrix_##name = { \
+		.w = TEST_W, \
+		.h = TEST_H, \
+		.src = (int *) malloc(sizeof(Matrix) * TEST_W * TEST_H), \
+		.method = name##_transpose \
+	}; \
+	for(int i = 0; i < matrix_##name.h; i++) \
+		for(int j = 0; j < matrix_##name.w; j++) \
+			*(matrix_##name.src + i * matrix_##name.h + j) = rand(); \
+	clock_gettime(CLOCK_REALTIME, &start); \
+	matrix_##name.method(matrix_##name.src, matrix_##name.w, matrix_##name.h); \
+	clock_gettime(CLOCK_REALTIME, &end);
+
+
 //0: naive	1:sse	2:sse_prefetch
 static bool matrix_bool[3] = {false, false, false};
 
@@ -38,57 +53,17 @@ int main(int argc, char *argv[])
     srand(time(NULL));
 
     if (matrix_bool[0]) {
-        Matrix matrix_naive = {
-            .w = TEST_W,
-            .h = TEST_H,
-            .src = (int *) malloc(sizeof(Matrix) * TEST_W * TEST_H),
-            .method = naive_transpose
-        };
-
-        for(int i = 0; i < matrix_naive.h; i++)
-            for(int j = 0; j< matrix_naive.w; j++)
-                *(matrix_naive.src + i * matrix_naive.h + j) = rand();
-
-        clock_gettime(CLOCK_REALTIME, &start);
-        matrix_naive.method(matrix_naive.src, matrix_naive.w, matrix_naive.h);
-        clock_gettime(CLOCK_REALTIME, &end);
+        TEST_MATRIX(naive);
         printf("naive: \t\t\t %ld us\n", diff_in_us(start, end));
-
     }
 
     if (matrix_bool[1]) {
-        Matrix matrix_sse = {
-            .w = TEST_W,
-            .h = TEST_H,
-            .src = (int *) malloc(sizeof(Matrix) * TEST_W * TEST_H),
-            .method = sse_transpose
-        };
-
-        for(int i = 0; i < matrix_sse.h; i++)
-            for(int j = 0; j< matrix_sse.w; j++)
-                *(matrix_sse.src + i * matrix_sse.h + j) = rand();
-
-        clock_gettime(CLOCK_REALTIME, &start);
-        matrix_sse.method(matrix_sse.src, matrix_sse.w, matrix_sse.h);
-        clock_gettime(CLOCK_REALTIME, &end);
+        TEST_MATRIX(sse);
         printf("sse: \t\t\t %ld us\n", diff_in_us(start, end));
     }
 
     if (matrix_bool[2]) {
-        Matrix matrix_sse_pre = {
-            .w = TEST_W,
-            .h = TEST_H,
-            .src = (int *) malloc(sizeof(Matrix) * TEST_W * TEST_H),
-            .method = sse_prefetch_transpose
-        };
-
-        for(int i = 0; i < matrix_sse_pre.h; i++)
-            for(int j = 0; j< matrix_sse_pre.w; j++)
-                *(matrix_sse_pre.src + i * matrix_sse_pre.h + j) = rand();
-
-        clock_gettime(CLOCK_REALTIME, &start);
-        matrix_sse_pre.method(matrix_sse_pre.src, matrix_sse_pre.w, matrix_sse_pre.h);
-        clock_gettime(CLOCK_REALTIME, &end);
+        TEST_MATRIX(prefetch);
         printf("sse_prefetch: \t\t %ld us\n", diff_in_us(start, end));
     }
 
